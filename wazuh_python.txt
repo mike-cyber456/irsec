@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+import sys
+import json
+import requests
+
+# Arguments passed by Wazuh integrator engine:
+# sys.argv[1] = path to alert file
+# sys.argv[2] = API key (optional)
+# sys.argv[3] = Hook URL
+
+alert_file_path = sys.argv[1]
+hook_url = sys.argv[3]
+
+with open(alert_file_path) as f:
+    alert_json = json.load(f)
+
+# Extract alert metadata
+rule_id = alert_json.get('rule', {}).get('id', 'N/A')
+description = alert_json.get('rule', {}).get('description', 'No description')
+level = alert_json.get('rule', {}).get('level', 0)
+agent_name = alert_json.get('agent', {}).get('name', 'Wazuh Manager')
+
+# Construct Discord Webhook Embed
+payload = {
+    "embeds": [
+        {
+            "title": f"🚨 Wazuh Alert - Level {level}",
+            "description": description,
+            "color": 15158332 if level >= 10 else 3447003,
+            "fields": [
+                {"name": "Agent", "value": agent_name, "inline": True},
+                {"name": "Rule ID", "value": str(rule_id), "inline": True}
+            ]
+        }
+    ]
+}
+
+# POST to Discord
+requests.post(hook_url, json=payload)

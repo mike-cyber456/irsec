@@ -1,0 +1,21 @@
+#!/bin/bash
+echo "=== [IRSeC] Quick Linux Security Audit ==="
+echo "[*] Checking listening ports..."
+ss -tulpn
+
+echo -
+echo "[*] Checking currently logged-in users..."
+who
+
+echo -
+echo "[*] Checking recent user accounts in /etc/passwd..."
+tail -n 15 /etc/passwd
+
+echo -
+echo "[*] Checking crontabs for persistence..."
+for user in $(cut -d: -f1 /etc/passwd); do
+    crontab -u "$user" -l 2>/dev/null | grep -v "^#" && echo "Found crontab for: $user"
+done
+
+echo -
+echo "[*] Audit complete. Remember to check Wazuh logs on 192.168.9.4!"
